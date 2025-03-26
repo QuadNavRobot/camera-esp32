@@ -26,10 +26,8 @@ void init_microROS()
 
 #ifdef CONFIG_MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE
     rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
-
-    // Static Agent IP and port can be used instead of autodisvery.
+    
     RCCHECK(rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT, rmw_options));
-// RCCHECK(rmw_uros_discover_agent(rmw_options));
 #endif
 
     RCCHECK(rclc_support_init_with_options(
@@ -75,29 +73,17 @@ void TaskTakePicture(void *argument)
 
     img_msg.format = micro_ros_string_utilities_set(img_msg.format, "jpeg");
 
-    // size_t init_time = 0;
-    // size_t end_time = 0;
-
     while (1)
     {
-        // init_time = pdTICKS_TO_MS(xTaskGetTickCount());
         camera_fb_t *pic = esp_camera_fb_get();
-        // end_time = pdTICKS_TO_MS(xTaskGetTickCount());
-        // printf("Time to take picture: %d ms\n", end_time - init_time);
-
+        
         img_msg.data.data = (uint8_t *)malloc(pic->len);
         img_msg.data.size = pic->len;
         memcpy(img_msg.data.data, pic->buf, pic->len);
 
-        // init_time = pdTICKS_TO_MS(xTaskGetTickCount());
         RCSOFTCHECK(rcl_publish(&image_pub, &img_msg, NULL));
-        // end_time = pdTICKS_TO_MS(xTaskGetTickCount());
-        // printf("Time to publish picture: %d ms\n", end_time - init_time);
-        // size_t psram_free = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-        // printf("RAM free: %d bytes\n", psram_free);
-        // printf("Take picture");
+        
         free(img_msg.data.data);
         esp_camera_fb_return(pic);
-        // vTaskDelay(pdMS_TO_TICKS(100)); // 1 second delay
     }
 }
